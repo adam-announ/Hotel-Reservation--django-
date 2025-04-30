@@ -1,0 +1,434 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - Hôtel Deluxe{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1>Tableau de bord</h1>
+                <p class="text-muted">Bienvenue, {{ user.get_full_name|default:user.username }}!</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.profile.role.name == 'Administrateur' or user.profile.role.name == 'Manager' %}
+                    <a href="{% url 'report_list' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-chart-bar"></i> Rapports
+                    </a>
+                {% endif %}
+                <a href="{% url 'profile' %}" class="btn btn-primary">
+                    <i class="fas fa-user-edit"></i> Mon profil
+                </a>
+            </div>
+        </div>
+
+        {% if user.profile.role.name == 'Client' %}
+            <!-- Dashboard pour les clients -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="dashboard-card h-100">
+                        <div class="text-primary dashboard-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h3>Réservations</h3>
+                        <p>Gérez vos réservations actuelles et passées.</p>
+                        <a href="{% url 'reservation_list' %}" class="btn btn-primary">Voir mes réservations</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card h-100">
+                        <div class="text-primary dashboard-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>Disponibilités</h3>
+                        <p>Recherchez des chambres disponibles pour vos prochains séjours.</p>
+                        <a href="{% url 'search_availability' %}" class="btn btn-primary">Rechercher</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card h-100">
+                        <div class="text-primary dashboard-icon">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h3>Mon profil</h3>
+                        <p>Gérez vos informations personnelles et préférences.</p>
+                        <a href="{% url 'profile' %}" class="btn btn-primary">Modifier mon profil</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Réservations récentes -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>Mes réservations récentes</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Dates</th>
+                                    <th>Chambres</th>
+                                    <th>Statut</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reservation in user.profile.client.reservations.all|dictsortreversed:"created_at"|slice:":5" %}
+                                <tr>
+                                    <td>#{{ reservation.id }}</td>
+                                    <td>{{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% for room in reservation.rooms.all %}
+                                            {{ room.number }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td><span class="badge bg-{{ reservation.status|lower }}">{{ reservation.get_status_display }}</span></td>
+                                    <td>{{ reservation.total_amount }} €</td>
+                                    <td>
+                                        <a href="{% url 'reservation_detail' reservation.id %}" class="btn btn-sm btn-outline-primary">Détails</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">Vous n'avez pas encore de réservation.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if user.profile.client.reservations.all %}
+                    <div class="text-end">
+                        <a href="{% url 'reservation_list' %}" class="btn btn-link">Voir toutes mes réservations <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        {% elif user.profile.role.name == 'Réceptionniste' or user.profile.role.name == 'Manager' or user.profile.role.name == 'Administrateur' %}
+            <!-- Dashboard pour le personnel -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="dashboard-card-title">Réservations aujourd'hui</h6>
+                                <div class="dashboard-card-value">{{ today_reservations_count|default:"0" }}</div>
+                            </div>
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                        </div>
+                        <div class="dashboard-card-change">
+                            <i class="fas fa-arrow-up"></i> +{{ today_reservations_change|default:"0" }}% par rapport à hier
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="dashboard-card-title">Check-ins aujourd'hui</h6>
+                                <div class="dashboard-card-value">{{ today_checkins_count|default:"0" }}</div>
+                            </div>
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-door-open"></i>
+                            </div>
+                        </div>
+                        <div class="dashboard-card-change">
+                            <i class="fas fa-arrow-down"></i> -{{ today_checkins_change|default:"0" }}% par rapport à hier
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="dashboard-card-title">Taux d'occupation</h6>
+                                <div class="dashboard-card-value">{{ occupancy_rate|default:"0" }}%</div>
+                            </div>
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-bed"></i>
+                            </div>
+                        </div>
+                        <div class="dashboard-card-change">
+                            <i class="fas fa-arrow-up"></i> +{{ occupancy_change|default:"0" }}% par rapport à la semaine dernière
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="dashboard-card-title">Revenu journalier</h6>
+                                <div class="dashboard-card-value">{{ daily_revenue|default:"0" }} €</div>
+                            </div>
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-euro-sign"></i>
+                            </div>
+                        </div>
+                        <div class="dashboard-card-change">
+                            <i class="fas fa-arrow-up"></i> +{{ revenue_change|default:"0" }}% par rapport à hier
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">Réservations récentes</h4>
+                            <a href="{% url 'reservation_list' %}" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Référence</th>
+                                            <th>Client</th>
+                                            <th>Dates</th>
+                                            <th>Statut</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for reservation in recent_reservations|default:'' %}
+                                        <tr>
+                                            <td>#{{ reservation.id }}</td>
+                                            <td>{{ reservation.client.profile.user.get_full_name|default:reservation.client.profile.user.username }}</td>
+                                            <td>{{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}</td>
+                                            <td><span class="badge bg-{{ reservation.status|lower }}">{{ reservation.get_status_display }}</span></td>
+                                            <td>{{ reservation.total_amount }} €</td>
+                                            <td>
+                                                <a href="{% url 'reservation_detail' reservation.id %}" class="btn btn-sm btn-outline-primary">Détails</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center">Aucune réservation récente.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4 class="mb-0">Activités récentes</h4>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% for activity in recent_activities|default:'' %}
+                                <li class="list-group-item border-0 d-flex justify-content-between align-items-start pb-3">
+                                    <div class="me-3">
+                                        {% if activity.type == 'reservation' %}
+                                            <span class="badge rounded-pill bg-primary p-2"><i class="fas fa-calendar-plus"></i></span>
+                                        {% elif activity.type == 'checkin' %}
+                                            <span class="badge rounded-pill bg-success p-2"><i class="fas fa-check-circle"></i></span>
+                                        {% elif activity.type == 'checkout' %}
+                                            <span class="badge rounded-pill bg-info p-2"><i class="fas fa-sign-out-alt"></i></span>
+                                        {% elif activity.type == 'payment' %}
+                                            <span class="badge rounded-pill bg-warning p-2"><i class="fas fa-money-bill-wave"></i></span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">{{ activity.title }}</div>
+                                        <small class="text-muted">{{ activity.description }}</small>
+                                    </div>
+                                    <small class="text-muted">{{ activity.time }}</small>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item border-0">
+                                    <p class="text-center text-muted">Aucune activité récente.</p>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">Check-ins/Check-outs aujourd'hui</h4>
+                            <div>
+                                <a href="{% url 'reservation_list' %}?date_filter=today" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="alert alert-success mb-0">
+                                        <h5><i class="fas fa-door-open"></i> Check-ins</h5>
+                                        <hr>
+                                        <h2 class="mb-0 text-center">{{ today_checkins_count|default:"0" }}</h2>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-info mb-0">
+                                        <h5><i class="fas fa-door-closed"></i> Check-outs</h5>
+                                        <hr>
+                                        <h2 class="mb-0 text-center">{{ today_checkouts_count|default:"0" }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Client</th>
+                                            <th>Chambre</th>
+                                            <th>Type</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for checkin in todays_checkins|default:'' %}
+                                        <tr>
+                                            <td>{{ checkin.client.profile.user.get_full_name }}</td>
+                                            <td>
+                                                {% for room in checkin.rooms.all %}
+                                                    {{ room.number }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                            <td>Check-in</td>
+                                            <td>
+                                                <a href="{% url 'check_in' checkin.id %}" class="btn btn-sm btn-success">Effectuer</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        
+                                        {% for checkout in todays_checkouts|default:'' %}
+                                        <tr>
+                                            <td>{{ checkout.client.profile.user.get_full_name }}</td>
+                                            <td>
+                                                {% for room in checkout.rooms.all %}
+                                                    {{ room.number }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                            <td>Check-out</td>
+                                            <td>
+                                                <a href="{% url 'check_out' checkout.id %}" class="btn btn-sm btn-info">Effectuer</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        
+                                        {% if not todays_checkins and not todays_checkouts %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">Aucun check-in/check-out prévu aujourd'hui.</td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">Disponibilité des chambres</h4>
+                            <div>
+                                <a href="{% url 'room_list' %}" class="btn btn-sm btn-outline-primary">Gérer les chambres</a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="alert alert-success mb-0">
+                                        <h5><i class="fas fa-check-circle"></i> Disponibles</h5>
+                                        <hr>
+                                        <h2 class="mb-0 text-center">{{ available_rooms_count|default:"0" }}</h2>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="alert alert-warning mb-0">
+                                        <h5><i class="fas fa-bed"></i> Occupées</h5>
+                                        <hr>
+                                        <h2 class="mb-0 text-center">{{ occupied_rooms_count|default:"0" }}</h2>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="alert alert-danger mb-0">
+                                        <h5><i class="fas fa-tools"></i> Maintenance</h5>
+                                        <hr>
+                                        <h2 class="mb-0 text-center">{{ maintenance_rooms_count|default:"0" }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="roomStatusChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if user.profile.role.name == 'Réceptionniste' or user.profile.role.name == 'Manager' or user.profile.role.name == 'Administrateur' %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Graphique pour le statut des chambres
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('roomStatusChart').getContext('2d');
+        
+        const roomStatusChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Disponibles', 'Occupées', 'Maintenance'],
+                datasets: [{
+                    data: [
+                        {{ available_rooms_count|default:"0" }}, 
+                        {{ occupied_rooms_count|default:"0" }}, 
+                        {{ maintenance_rooms_count|default:"0" }}
+                    ],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(220, 53, 69, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

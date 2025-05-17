@@ -1,0 +1,562 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Manager - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Tableau de bord Manager</h1>
+                <p class="text-muted">Bienvenue, {{ user.get_full_name }}! Gérez vos équipes et suivez les performances.</p>
+            </div>
+            <div>
+                <a href="{% url 'report_list' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-chart-line"></i> Rapports
+                </a>
+                <a href="{% url 'room_list' %}?available=all" class="btn btn-primary">
+                    <i class="fas fa-bed"></i> Gérer les chambres
+                </a>
+            </div>
+        </div>
+        
+        <!-- Statistiques principales -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Taux d'occupation</h6>
+                            <div class="dashboard-card-value">{{ occupancy_rate|default:"78" }}%</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                    </div>
+                    <div class="dashboard-card-change">
+                        <i class="fas fa-arrow-up"></i> +{{ occupancy_change|default:"3" }}% vs semaine précédente
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Revenus mensuels</h6>
+                            <div class="dashboard-card-value">{{ monthly_revenue|default:"42500" }} €</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                    </div>
+                    <div class="dashboard-card-change">
+                        <i class="fas fa-arrow-up"></i> +{{ revenue_growth|default:"5.2" }}% vs mois précédent
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Réservations ce mois</h6>
+                            <div class="dashboard-card-value">{{ monthly_reservations|default:"156" }}</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                    </div>
+                    <div class="dashboard-card-change">
+                        <i class="fas fa-arrow-up"></i> +{{ reservations_growth|default:"8" }}% vs mois précédent
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Satisfaction clients</h6>
+                            <div class="dashboard-card-value">{{ client_satisfaction|default:"4.7" }}/5</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-smile"></i>
+                        </div>
+                    </div>
+                    <div class="dashboard-card-change">
+                        <i class="fas fa-equals"></i> Stable vs mois précédent
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Graphiques et statistiques -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Revenus et taux d'occupation (6 derniers mois)</h4>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-primary active chart-toggle" data-chart="monthly">Mensuel</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary chart-toggle" data-chart="weekly">Hebdomadaire</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="revenueOccupancyChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Performance par type de chambre</h4>
+                        <a href="{% url 'revenue_report' %}" class="btn btn-sm btn-outline-primary">Rapport détaillé</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Type de chambre</th>
+                                    <th>Taux d'occupation</th>
+                                    <th>Revenu moyen/nuit</th>
+                                    <th>Revenu total</th>
+                                    <th>% des revenus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in room_type_stats|default:'' %}
+                                <tr>
+                                    <td>{{ stat.name }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div style="width: 60%">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ stat.occupancy_rate }}%"></div>
+                                                </div>
+                                            </div>
+                                            <span class="ms-2">{{ stat.occupancy_rate }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ stat.avg_revenue }} €</td>
+                                    <td>{{ stat.total_revenue }} €</td>
+                                    <td>{{ stat.revenue_percentage }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td>Standard</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div style="width: 60%">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 85%"></div>
+                                                </div>
+                                            </div>
+                                            <span class="ms-2">85%</span>
+                                        </div>
+                                    </td>
+                                    <td>95 €</td>
+                                    <td>12,350 €</td>
+                                    <td>29%</td>
+                                </tr>
+                                <tr>
+                                    <td>Deluxe</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div style="width: 60%">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 78%"></div>
+                                                </div>
+                                            </div>
+                                            <span class="ms-2">78%</span>
+                                        </div>
+                                    </td>
+                                    <td>150 €</td>
+                                    <td>17,550 €</td>
+                                    <td>41%</td>
+                                </tr>
+                                <tr>
+                                    <td>Suite</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div style="width: 60%">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 65%"></div>
+                                                </div>
+                                            </div>
+                                            <span class="ms-2">65%</span>
+                                        </div>
+                                    </td>
+                                    <td>250 €</td>
+                                    <td>12,600 €</td>
+                                    <td>30%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Statut des chambres</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="roomStatusChart"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div><i class="fas fa-circle text-success me-2"></i> Disponibles</div>
+                                <div class="fw-bold">{{ available_rooms|default:"15" }} chambres</div>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <div><i class="fas fa-circle text-warning me-2"></i> Occupées</div>
+                                <div class="fw-bold">{{ occupied_rooms|default:"22" }} chambres</div>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <div><i class="fas fa-circle text-danger me-2"></i> Maintenance</div>
+                                <div class="fw-bold">{{ maintenance_rooms|default:"3" }} chambres</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'room_list' %}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-bed me-2"></i> Gérer les chambres
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Répartition des revenus</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="revenueSourcesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Top clients du mois</h4>
+                        <a href="{% url 'client_stats' %}" class="btn btn-sm btn-outline-primary">Détails</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for client in top_clients|default:'' %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            {{ client.initials }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ client.name }}</h6>
+                                            <small class="text-muted">{{ client.reservations_count }} réservations</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">{{ client.total_spent }} €</div>
+                                        <small class="text-success">
+                                            <i class="fas fa-arrow-up"></i> {{ client.growth }}%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            JD
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">Jean Dupont</h6>
+                                            <small class="text-muted">5 réservations</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">3,250 €</div>
+                                        <small class="text-success">
+                                            <i class="fas fa-arrow-up"></i> 12%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            SD
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">Sophie Durand</h6>
+                                            <small class="text-muted">3 réservations</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">2,800 €</div>
+                                        <small class="text-success">
+                                            <i class="fas fa-arrow-up"></i> 8%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            PM
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">Pierre Martin</h6>
+                                            <small class="text-muted">4 réservations</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">2,450 €</div>
+                                        <small class="text-danger">
+                                            <i class="fas fa-arrow-down"></i> 3%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Actions rapides</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a href="{% url 'occupancy_report' %}" class="d-block p-3 text-center text-decoration-none">
+                                    <i class="fas fa-chart-line fa-2x text-primary mb-2"></i>
+                                    <h5>Rapport d'occupation</h5>
+                                    <p class="text-muted mb-0 small">Analysez les taux d'occupation</p>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'revenue_report' %}" class="d-block p-3 text-center text-decoration-none">
+                                    <i class="fas fa-euro-sign fa-2x text-primary mb-2"></i>
+                                    <h5>Rapport de revenus</h5>
+                                    <p class="text-muted mb-0 small">Suivez les revenus et dépenses</p>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'client_stats' %}" class="d-block p-3 text-center text-decoration-none">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h5>Données clients</h5>
+                                    <p class="text-muted mb-0 small">Analysez le comportement client</p>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="#" class="d-block p-3 text-center text-decoration-none">
+                                    <i class="fas fa-cog fa-2x text-primary mb-2"></i>
+                                    <h5>Paramètres</h5>
+                                    <p class="text-muted mb-0 small">Configurez le système</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Graphique revenus et occupation
+    const revenueOccupancyCtx = document.getElementById('revenueOccupancyChart').getContext('2d');
+    
+    // Données d'exemple - à remplacer par des données réelles
+    const monthlyData = {
+        labels: ['Novembre', 'Décembre', 'Janvier', 'Février', 'Mars', 'Avril'],
+        datasets: [
+            {
+                label: 'Revenus (€)',
+                data: [35000, 42000, 38000, 40000, 45000, 48000],
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                yAxisID: 'y',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'Taux d\'occupation (%)',
+                data: [72, 85, 70, 74, 82, 78],
+                backgroundColor: 'rgba(46, 204, 113, 0)',
+                borderColor: 'rgba(46, 204, 113, 1)',
+                yAxisID: 'y1',
+                borderWidth: 2,
+                tension: 0.4
+            }
+        ]
+    };
+    
+    const weeklyData = {
+        labels: ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4', 'Semaine 5', 'Semaine 6'],
+        datasets: [
+            {
+                label: 'Revenus (€)',
+                data: [8000, 9500, 11000, 10500, 12000, 11500],
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                yAxisID: 'y',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'Taux d\'occupation (%)',
+                data: [65, 72, 80, 75, 85, 82],
+                backgroundColor: 'rgba(46, 204, 113, 0)',
+                borderColor: 'rgba(46, 204, 113, 1)',
+                yAxisID: 'y1',
+                borderWidth: 2,
+                tension: 0.4
+            }
+        ]
+    };
+    
+    const revenueOccupancyChart = new Chart(revenueOccupancyCtx, {
+        type: 'line',
+        data: monthlyData,
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Revenus (€)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Taux d\'occupation (%)'
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        drawOnChartArea: false,
+                    }
+                }
+            }
+        }
+    });
+    
+    // Gestion du toggle mensuel/hebdomadaire
+    document.querySelectorAll('.chart-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.chart-toggle').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (this.dataset.chart === 'monthly') {
+                revenueOccupancyChart.data = monthlyData;
+            } else {
+                revenueOccupancyChart.data = weeklyData;
+            }
+            
+            revenueOccupancyChart.update();
+        });
+    });
+    
+    // Graphique statut des chambres
+    const roomStatusCtx = document.getElementById('roomStatusChart').getContext('2d');
+    new Chart(roomStatusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Disponibles', 'Occupées', 'Maintenance'],
+            datasets: [{
+                data: [15, 22, 3],
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.7)',
+                    'rgba(241, 196, 15, 0.7)',
+                    'rgba(231, 76, 60, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(46, 204, 113, 1)',
+                    'rgba(241, 196, 15, 1)',
+                    'rgba(231, 76, 60, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            cutout: '70%'
+        }
+    });
+    
+    // Graphique sources de revenus
+    const revenueSourcesCtx = document.getElementById('revenueSourcesChart').getContext('2d');
+    new Chart(revenueSourcesCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Chambres', 'Restaurant', 'Spa', 'Services additionnels'],
+            datasets: [{
+                data: [65, 15, 12, 8],
+                backgroundColor: [
+                    'rgba(52, 152, 219, 0.7)',
+                    'rgba(155, 89, 182, 0.7)',
+                    'rgba(52, 73, 94, 0.7)',
+                    'rgba(230, 126, 34, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(52, 152, 219, 1)',
+                    'rgba(155, 89, 182, 1)',
+                    'rgba(52, 73, 94, 1)',
+                    'rgba(230, 126, 34, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

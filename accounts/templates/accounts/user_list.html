@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des utilisateurs - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Gestion des utilisateurs</h1>
+                <p class="text-muted">Gérez tous les utilisateurs du système.</p>
+            </div>
+            <div>
+                <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="fas fa-user-plus me-2"></i> Ajouter un utilisateur
+                </a>
+            </div>
+        </div>
+        
+        <!-- Filtres et recherche -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="search" class="form-label">Recherche</label>
+                        <input type="text" class="form-control" id="search" name="search" placeholder="Nom, email, téléphone..." value="{{ request.GET.search|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="role" class="form-label">Rôle</label>
+                        <select class="form-select" id="role" name="role">
+                            <option value="">Tous les rôles</option>
+                            {% for role in roles %}
+                                <option value="{{ role.id }}" {% if request.GET.role == role.id|stringformat:"i" %}selected{% endif %}>{{ role.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Statut</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">Tous les statuts</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Actif</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactif</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i> Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Liste des utilisateurs -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Utilisateurs</h4>
+                <div>
+                    <span class="badge bg-primary">{{ users|length|default:"0" }} utilisateurs</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Rôle</th>
+                                <th>Inscription</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_item in users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            {{ user_item.first_name|first|upper }}{{ user_item.last_name|first|upper }}
+                                        </div>
+                                        <div>
+                                            <div>{{ user_item.get_full_name }}</div>
+                                            <small class="text-muted">@{{ user_item.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user_item.email }}</td>
+                                <td>{{ user_item.profile.phone|default:"-" }}</td>
+                                <td><span class="badge bg-primary">{{ user_item.profile.role.name }}</span></td>
+                                <td>{{ user_item.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if user_item.is_active %}
+                                        <span class="badge bg-success">Actif</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactif</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'user_detail' user_item.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user_item.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user_item.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">Aucun utilisateur trouvé</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% if users.has_other_pages %}
+            <div class="card-footer">
+                <nav aria-label="Pagination des utilisateurs">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if users.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ users.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Précédent">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Précédent">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for i in users.paginator.page_range %}
+                            {% if users.number == i %}
+                                <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if users.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ users.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Suivant">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Suivant">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Modal d'ajout d'utilisateur -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addUserModalLabel">Ajouter un utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm" method="post" action="{% url 'user_create' %}">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Téléphone</label>
+                            <input type="text" class="form-control" id="phone" name="phone">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="role" class="form-label">Rôle</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="">Sélectionnez un rôle</option>
+                                {% for role in roles %}
+                                    <option value="{{ role.id }}">{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password1" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="password1" name="password1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="password2" class="form-label">Confirmation mot de passe</label>
+                            <input type="password" class="form-control" id="password2" name="password2" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Adresse</label>
+                        <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                        <label class="form-check-label" for="is_active">Utilisateur actif</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="addUserForm" class="btn btn-primary">Ajouter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals d'édition et de suppression -->
+{% for user_item in users %}
+    <!-- Modal d'édition -->
+    <div class="modal fade" id="editUserModal{{ user_item.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Modifier l'utilisateur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm{{ user_item.id }}" method="post" action="{% url 'user_update' user_item.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Prénom</label>
+                                <input type="text" class="form-control" name="first_name" value="{{ user_item.first_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom</label>
+                                <input type="text" class="form-control" name="last_name" value="{{ user_item.last_name }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ user_item.email }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Téléphone</label>
+                                <input type="text" class="form-control" name="phone" value="{{ user_item.profile.phone|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Rôle</label>
+                                <select class="form-select" name="role" required>
+                                    {% for role in roles %}
+                                        <option value="{{ role.id }}" {% if user_item.profile.role.id == role.id %}selected{% endif %}>{{ role.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Statut</label>
+                                <select class="form-select" name="is_active">
+                                    <option value="True" {% if user_item.is_active %}selected{% endif %}>Actif</option>
+                                    <option value="False" {% if not user_item.is_active %}selected{% endif %}>Inactif</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Adresse</label>
+                            <textarea class="form-control" name="address" rows="2">{{ user_item.profile.client.address|default:'' }}</textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="editUserForm{{ user_item.id }}" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de suppression -->
+    <div class="modal fade" id="deleteUserModal{{ user_item.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Supprimer l'utilisateur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ user_item.get_full_name }}</strong> ?</p>
+                    <p>Cette action est irréversible et supprimera toutes les données associées à cet utilisateur.</p>
+                    
+                    {% if user_item.profile.client.reservations.exists %}
+                        <div class="alert alert-warning">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h6>Attention</h6>
+                                    <p class="mb-0">Cet utilisateur a des réservations actives. La suppression de son compte pourrait affecter les données du système.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <form method="post" action="{% url 'user_delete' user_item.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-2"></i> Supprimer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}

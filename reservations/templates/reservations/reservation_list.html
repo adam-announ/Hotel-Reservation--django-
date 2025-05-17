@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes réservations - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1>Mes réservations</h1>
+                <p class="text-muted">Consultez et gérez vos réservations</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'search_availability' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle réservation
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtres pour le personnel -->
+        {% if is_staff %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">Statut</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">Tous les statuts</option>
+                            {% for status_code, status_name in statuses %}
+                            <option value="{{ status_code }}" {% if selected_status == status_code %}selected{% endif %}>{{ status_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="date_filter" class="form-label">Période</label>
+                        <select name="date_filter" id="date_filter" class="form-select">
+                            <option value="">Toutes les dates</option>
+                            <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                            <option value="upcoming" {% if date_filter == 'upcoming' %}selected{% endif %}>À venir</option>
+                            <option value="past" {% if date_filter == 'past' %}selected{% endif %}>Passées</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Liste des réservations -->
+        {% if reservations %}
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    {% if is_staff %}<th>Client</th>{% endif %}
+                                    <th>Dates</th>
+                                    <th>Chambres</th>
+                                    <th>Statut</th>
+                                    <th>Montant</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reservation in reservations %}
+                                <tr>
+                                    <td>#{{ reservation.id }}</td>
+                                    {% if is_staff %}
+                                    <td>{{ reservation.client.profile.user.get_full_name|default:reservation.client.profile.user.username }}</td>
+                                    {% endif %}
+                                    <td>{{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% for room in reservation.rooms.all %}
+                                            <span class="badge bg-light text-dark">{{ room.number }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% if reservation.status == 'PENDING' %}
+                                            <span class="badge bg-warning text-dark">En attente</span>
+                                        {% elif reservation.status == 'CONFIRMED' %}
+                                            <span class="badge bg-success">Confirmée</span>
+                                        {% elif reservation.status == 'CHECKED_IN' %}
+                                            <span class="badge bg-primary">Check-in effectué</span>
+                                        {% elif reservation.status == 'CHECKED_OUT' %}
+                                            <span class="badge bg-info">Terminée</span>
+                                        {% elif reservation.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger">Annulée</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ reservation.total_amount }} €</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'reservation_detail' reservation.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if reservation.status == 'PENDING' or reservation.status == 'CONFIRMED' %}
+                                                <a href="{% url 'cancel_reservation' reservation.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-times"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> 
+                {% if selected_status or date_filter %}
+                    Aucune réservation ne correspond à vos critères de filtrage.
+                {% else %}
+                    Vous n'avez pas encore de réservations. <a href="{% url 'search_availability' %}" class="alert-link">Créez votre première réservation</a> !
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails Chambre {{ room.number }} - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0">{{ room.room_type.name }} - Chambre {{ room.number }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Image de la chambre -->
+                        <div class="text-center mb-4">
+                            <img src="{{ room.image.url|default:'/static/images/room-placeholder.jpg' }}" 
+                                  class="img-fluid rounded" 
+                                  alt="{{ room.room_type.name }} - Chambre {{ room.number }}">
+                        </div>
+                        
+                        <h4 class="mb-3">Description</h4>
+                        <p>{{ room.description }}</p>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Informations</h4>
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Type de chambre:</span>
+                                        <strong>{{ room.room_type.name }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Capacité:</span>
+                                        <strong>{{ room.room_type.max_capacity }} personnes</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Étage:</span>
+                                        <strong>{{ room.floor }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Prix par nuit:</span>
+                                        <strong class="text-primary">{{ room.base_price }} €</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Statut:</span>
+                                        <strong class="{% if room.status == 'AVAILABLE' %}text-success{% elif room.status == 'OCCUPIED' %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ room.get_status_display }}
+                                        </strong>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Équipements</h4>
+                                <ul class="list-group">
+                                    {% for equipment_assignment in room.equipments.all %}
+                                    <li class="list-group-item">
+                                        <i class="fas {{ equipment_assignment.equipment.icon }} text-primary me-2"></i>
+                                        {{ equipment_assignment.equipment.name }}
+                                    </li>
+                                    {% empty %}
+                                    <li class="list-group-item">
+                                        Aucun équipement spécifié.
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="{% url 'room_list' %}" class="btn btn-outline-primary w-100 mb-2 mb-md-0">
+                                    <i class="fas fa-arrow-left me-2"></i> Retour aux chambres
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'search_availability' %}?room_id={{ room.id }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-calendar-check me-2"></i> Réserver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Réceptionniste - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Tableau de bord Réceptionniste</h1>
+                <p class="text-muted">Bienvenue, {{ user.get_full_name }}! Gérez les réservations et les clients.</p>
+            </div>
+            <div>
+                <a href="{% url 'search_availability' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search"></i> Disponibilités
+                </a>
+                <a href="{% url 'create_reservation' %}" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus"></i> Nouvelle réservation
+                </a>
+            </div>
+        </div>
+        
+        <!-- Activités du jour -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Check-ins aujourd'hui</h6>
+                            <div class="dashboard-card-value">{{ today_checkins_count|default:"0" }}</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-door-open"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'reservation_list' %}?date_filter=today&status=CONFIRMED" class="stretched-link"></a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Check-outs aujourd'hui</h6>
+                            <div class="dashboard-card-value">{{ today_checkouts_count|default:"0" }}</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-door-closed"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'reservation_list' %}?date_filter=today&status=CHECKED_IN" class="stretched-link"></a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Chambres disponibles</h6>
+                            <div class="dashboard-card-value">{{ available_rooms_count|default:"0" }}</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'room_list' %}?available=yes" class="stretched-link"></a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="dashboard-card-title">Taux d'occupation</h6>
+                            <div class="dashboard-card-value">{{ occupancy_rate|default:"0" }}%</div>
+                        </div>
+                        <div class="dashboard-card-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Check-in/Check-out pour aujourd'hui -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-door-open text-success me-2"></i> Check-ins à effectuer
+                        </h4>
+                        <a href="{% url 'reservation_list' %}?date_filter=today&status=CONFIRMED" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Chambre(s)</th>
+                                        <th>Arrivée</th>
+                                        <th>Durée</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for checkin in todays_checkins|default:'' %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-xs me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                                    {{ checkin.client.profile.user.first_name|first|upper }}{{ checkin.client.profile.user.last_name|first|upper }}
+                                                </div>
+                                                <div>{{ checkin.client.profile.user.get_full_name }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% for room in checkin.rooms.all %}
+                                                <span class="badge bg-light text-dark">{{ room.number }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ checkin.check_in_date|date:"d/m/Y" }}</td>
+                                        <td>{{ checkin.check_in_date|timeuntil:checkin.check_out_date|default:"--" }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'check_in' checkin.id %}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check-circle me-1"></i> Check-in
+                                                </a>
+                                                <a href="{% url 'reservation_detail' checkin.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">
+                                            <p class="text-muted mb-0">Aucun check-in prévu aujourd'hui</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-door-closed text-info me-2"></i> Check-outs à effectuer
+                        </h4>
+                        <a href="{% url 'reservation_list' %}?date_filter=today&status=CHECKED_IN" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Chambre(s)</th>
+                                        <th>Départ</th>
+                                        <th>Solde</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for checkout in todays_checkouts|default:'' %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-xs me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                                    {{ checkout.client.profile.user.first_name|first|upper }}{{ checkout.client.profile.user.last_name|first|upper }}
+                                                </div>
+                                                <div>{{ checkout.client.profile.user.get_full_name }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% for room in checkout.rooms.all %}
+                                                <span class="badge bg-light text-dark">{{ room.number }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ checkout.check_out_date|date:"d/m/Y" }}</td>
+                                        <td>
+                                            {% comment %} Vérification du solde sans utiliser de filtres personnalisés {% endcomment %}
+                                            {% if checkout.payments.all %}
+                                                {% if checkout.total_amount > checkout.payments.all.0.amount %}
+                                                    <span class="text-danger">Reste à payer</span>
+                                                {% else %}
+                                                    <span class="text-success">Payé</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-danger">{{ checkout.total_amount }} €</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'check_out' checkout.id %}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-sign-out-alt me-1"></i> Check-out
+                                                </a>
+                                                <a href="{% url 'reservation_detail' checkout.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">
+                                            <p class="text-muted mb-0">Aucun check-out prévu aujourd'hui</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recherche et actions rapides -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Recherche rapide</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" action="{% url 'search_results' %}">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <select class="form-select" id="search_type" name="search_type">
+                                        <option value="client">Rechercher un client</option>
+                                        <option value="reservation">Rechercher une réservation</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="query" name="query" placeholder="Nom, numéro, email...">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-search"></i> Rechercher
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-4">
+                            <h5>Résultats récents</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Information</th>
+                                            <th>Détails</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="searchResults">
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3">
+                                                <p class="text-muted mb-0">Effectuez une recherche pour voir les résultats</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Actions rapides</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'create_reservation' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-calendar-plus me-2"></i> Nouvelle réservation
+                            </a>
+                            <a href="{% url 'search_availability' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-search me-2"></i> Vérifier disponibilités
+                            </a>
+                            <a href="{% url 'reservation_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-list-alt me-2"></i> Liste des réservations
+                            </a>
+                            <a href="#" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickPaymentModal">
+                                <i class="fas fa-money-bill-wave me-2"></i> Enregistrer un paiement
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Prochaines arrivées / départs -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Prochaines réservations</h4>
+                <a href="{% url 'reservation_list' %}?date_filter=upcoming" class="btn btn-sm btn-outline-primary">Voir tout</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Client</th>
+                                <th>Arrivée</th>
+                                <th>Départ</th>
+                                <th>Chambres</th>
+                                <th>Statut</th>
+                                <th>Montant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in upcoming_reservations|default:'' %}
+                            <tr>
+                                <td>#{{ reservation.id }}</td>
+                                <td>{{ reservation.client.profile.user.get_full_name }}</td>
+                                <td>{{ reservation.check_in_date|date:"d/m/Y" }}</td>
+                                <td>{{ reservation.check_out_date|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% for room in reservation.rooms.all %}
+                                        <span class="badge bg-light text-dark">{{ room.number }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if reservation.status == 'PENDING' %}
+                                        <span class="badge bg-warning">En attente</span>
+                                    {% elif reservation.status == 'CONFIRMED' %}
+                                        <span class="badge bg-success">Confirmée</span>
+                                    {% elif reservation.status == 'CHECKED_IN' %}
+                                        <span class="badge bg-primary">Check-in effectué</span>
+                                    {% elif reservation.status == 'CHECKED_OUT' %}
+                                        <span class="badge bg-info">Check-out effectué</span>
+                                    {% elif reservation.status == 'CANCELLED' %}
+                                        <span class="badge bg-danger">Annulée</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ reservation.total_amount }} €</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'reservation_detail' reservation.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if reservation.status == 'CONFIRMED' and reservation.check_in_date|date:"Y-m-d" == today_date|date:"Y-m-d" %}
+                                            <a href="{% url 'check_in' reservation.id %}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check-circle"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-3">
+                                    <p class="text-muted mb-0">Aucune réservation à venir</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal pour enregistrement rapide de paiement -->
+<div class="modal fade" id="quickPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Enregistrer un paiement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickPaymentForm" method="post" action="{% url 'create_payment' 0 %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="reservationId" class="form-label">ID de réservation</label>
+                        <input type="number" class="form-control" id="reservationId" name="reservation_id" required>
+                        <div class="form-text">Entrez l'ID de la réservation pour laquelle vous souhaitez enregistrer un paiement</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="paymentAmount" class="form-label">Montant (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="paymentAmount" name="amount" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="paymentMethod" class="form-label">Méthode de paiement</label>
+                        <select class="form-select" id="paymentMethod" name="payment_method" required>
+                            <option value="CREDIT_CARD">Carte de crédit</option>
+                            <option value="CASH">Espèces</option>
+                            <option value="BANK_TRANSFER">Virement bancaire</option>
+                            <option value="CHECK">Chèque</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="paymentReference" class="form-label">Référence</label>
+                        <input type="text" class="form-control" id="paymentReference" name="reference">
+                        <div class="form-text">Numéro de transaction, référence de chèque, etc.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="quickPaymentForm" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> Enregistrer le paiement
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion du formulaire de paiement rapide
+    const quickPaymentForm = document.getElementById('quickPaymentForm');
+    if (quickPaymentForm) {
+        quickPaymentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const reservationId = document.getElementById('reservationId').value;
+            
+            // Rediriger vers l'URL de création de paiement avec l'ID correct
+            window.location.href = `/reservations/payment/create/${reservationId}/`;
+        });
+    }
+});
+</script>
+{% endblock %}

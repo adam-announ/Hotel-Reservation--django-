@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inscription - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Créer un compte</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text mb-4">Remplissez le formulaire ci-dessous pour créer votre compte et commencer à réserver vos séjours.</p>
+                        
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.first_name|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.last_name|as_crispy_field }}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.username|as_crispy_field }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.phone|as_crispy_field }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.address|as_crispy_field }}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.password1|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.password2|as_crispy_field }}
+                                </div>
+                            </div>
+                            
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i> Créer mon compte
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <p class="mb-0">
+                            Vous avez déjà un compte ? <a href="{% url 'login' %}">Connectez-vous</a>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-shield-alt text-primary me-2"></i> Protection de vos données</h5>
+                            <p class="card-text text-muted small">
+                                Nous accordons une grande importance à la protection de vos données personnelles. 
+                                Vos informations sont sécurisées et ne seront jamais partagées avec des tiers sans votre consentement.
+                                Pour plus d'informations, consultez notre <a href="#">politique de confidentialité</a>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

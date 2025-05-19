@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annulation de réservation - Hôtel Deluxe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .cancellation-details {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #dc3545;
+        }
+        .policy-section {
+            background-color: #fff3cd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .cancellation-icon {
+            font-size: 48px;
+            color: #dc3545;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚫 Réservation Annulée</h1>
+        <h2>Hôtel Deluxe</h2>
+    </div>
+    
+    <div class="content">
+        <div class="cancellation-icon">❌</div>
+        
+        <p>Cher(e) {{ user.get_full_name }},</p>
+        
+        <p>Nous vous confirmons l'annulation de votre réservation à l'Hôtel Deluxe.</p>
+        
+        <div class="cancellation-details">
+            <h3>📋 Détails de la réservation annulée</h3>
+            <table>
+                <tr>
+                    <th>Numéro de réservation</th>
+                    <td><strong>#{{ reservation.id }}</strong></td>
+                </tr>
+                <tr>
+                    <th>Nom du client</th>
+                    <td>{{ user.get_full_name }}</td>
+                </tr>
+                <tr>
+                    <th>Date d'arrivée prévue</th>
+                    <td>{{ reservation.check_in_date|date:"l d F Y" }}</td>
+                </tr>
+                <tr>
+                    <th>Date de départ prévue</th>
+                    <td>{{ reservation.check_out_date|date:"l d F Y" }}</td>
+                </tr>
+                <tr>
+                    <th>Montant de la réservation</th>
+                    <td>{{ reservation.total_amount }}€</td>
+                </tr>
+                <tr>
+                    <th>Date d'annulation</th>
+                    <td>{{ reservation.updated_at|date:"l d F Y à H:i" }}</td>
+                </tr>
+                <tr>
+                    <th>Statut</th>
+                    <td style="color: red;"><strong>❌ Annulée</strong></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="policy-section">
+            <h3>💰 Politique de remboursement</h3>
+            <p>Conformément à notre politique d'annulation :</p>
+            <ul>
+                <li><strong>Annulation gratuite :</strong> Jusqu'à 24h avant l'arrivée</li>
+                <li><strong>Annulation tardive :</strong> Des frais peuvent s'appliquer</li>
+                <li><strong>Traitement des remboursements :</strong> 3-5 jours ouvrables</li>
+            </ul>
+            
+            {% comment %}
+            Vous pourriez ajouter ici une logique pour calculer les frais d'annulation
+            basée sur la date d'annulation par rapport à la date d'arrivée
+            {% endcomment %}
+            
+            <p>Si un remboursement est applicable, celui-ci sera traité sous 3 à 5 jours ouvrables sur votre moyen de paiement original.</p>
+        </div>
+        
+        <div class="cancellation-details">
+            <h3>📞 Besoin d'aide ?</h3>
+            <p>Si cette annulation n'était pas volontaire ou si vous avez des questions concernant :</p>
+            <ul>
+                <li>Le processus de remboursement</li>
+                <li>Une nouvelle réservation</li>
+                <li>Des circonstances particulières</li>
+            </ul>
+            <p>N'hésitez pas à nous contacter immédiatement.</p>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="http://127.0.0.1:8000/rooms/search/" 
+               style="display: inline-block; background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">
+                🔍 Rechercher d'autres dates
+            </a>
+            <a href="http://127.0.0.1:8000/" 
+               style="display: inline-block; background-color: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">
+                🏠 Retour à l'accueil
+            </a>
+        </div>
+        
+        <p>Nous regrettons que votre séjour ne puisse avoir lieu et espérons vous accueillir prochainement à l'Hôtel Deluxe.</p>
+        
+        <p>Cordialement,<br>
+        L'équipe de l'Hôtel Deluxe</p>
+    </div>
+    
+    <div class="footer">
+        <h3>{{ hotel_name }}</h3>
+        <p>Téléphone: {{ hotel_phone }} | Email: {{ hotel_email }}</p>
+        <p>Service client disponible 24h/24, 7j/7</p>
+        
+        <div style="margin-top: 15px;">
+            <small>
+                Cet email a été envoyé automatiquement. Merci de ne pas y répondre.<br>
+                Pour toute question, contactez-nous au {{ hotel_phone }}.
+            </small>
+        </div>
+    </div>
+</body>
+</html>

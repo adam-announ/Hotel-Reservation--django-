@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Nos chambres - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1>Nos chambres</h1>
+                <p class="text-muted">Découvrez nos chambres confortables et élégantes</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.profile.role.name == 'Administrateur' or user.profile.role.name == 'Manager' %}
+                <a href="{% url 'room_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Ajouter une chambre
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="{% url 'room_list' %}" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="room_type" class="form-label">Type de chambre</label>
+                        <select name="room_type" id="room_type" class="form-select">
+                            <option value="">Tous les types</option>
+                            {% for type in room_types %}
+                            <option value="{{ type.id }}" {% if request.GET.room_type == type.id|stringformat:"i" %}selected{% endif %}>{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="capacity" class="form-label">Capacité</label>
+                        <select name="capacity" id="capacity" class="form-select">
+                            <option value="">Toutes capacités</option>
+                            <option value="1" {% if request.GET.capacity == '1' %}selected{% endif %}>1 personne</option>
+                            <option value="2" {% if request.GET.capacity == '2' %}selected{% endif %}>2 personnes</option>
+                            <option value="3" {% if request.GET.capacity == '3' %}selected{% endif %}>3 personnes</option>
+                            <option value="4" {% if request.GET.capacity == '4' %}selected{% endif %}>4+ personnes</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="price" class="form-label">Prix max</label>
+                        <input type="number" class="form-control" id="price" name="price" placeholder="Prix maximum" value="{{ request.GET.price|default:'' }}">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Liste des chambres -->
+        <div class="row">
+            {% if rooms %}
+                {% for room in rooms %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if room.image and room.image.url %}
+                            <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.room_type.name }}">
+                        {% else %}
+                            <img src="/static/images/room-placeholder.jpg" class="card-img-top" alt="{{ room.room_type.name }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ room.room_type.name }} - Chambre {{ room.number }}</h5>
+                            <div class="mb-2">
+                                <span class="badge bg-info text-dark">{{ room.room_type.max_capacity }} personnes</span>
+                                <span class="badge bg-success">{{ room.floor }}ème étage</span>
+                            </div>
+                            <p class="card-text">{{ room.description|truncatechars:100 }}</p>
+                            <p class="text-primary fw-bold">{{ room.base_price }} €<small class="text-muted fw-normal"> / nuit</small></p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-primary">Détails</a>
+                                {% if user.profile.role.name == 'Administrateur' or user.profile.role.name == 'Manager' %}
+                                <div class="btn-group">
+                                    <a href="{% url 'room_update' room.id %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'room_delete' room.id %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'search_availability' %}?room_id={{ room.id }}" class="btn btn-primary">Réserver</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Aucune chambre ne correspond à vos critères. Veuillez modifier vos filtres ou <a href="{% url 'room_list' %}">voir toutes les chambres</a>.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

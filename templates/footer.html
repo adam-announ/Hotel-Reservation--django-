@@ -1,0 +1,73 @@
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <div class="footer-logo">
+                    <i class="fas fa-hotel"></i> Hôtel Deluxe
+                </div>
+                <p class="footer-description">
+                    Un havre de paix moderne au cœur de la ville, offrant confort et services exceptionnels pour vos séjours professionnels et touristiques.
+                </p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <h5 class="footer-heading">Liens rapides</h5>
+                <ul class="footer-links">
+                    <li><a href="{% url 'home' %}">Accueil</a></li>
+                    <li><a href="{% url 'room_list' %}">Chambres</a></li>
+                    <li><a href="{% url 'search_availability' %}">Disponibilités</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'reservation_list' %}">Mes réservations</a></li>
+                        <li><a href="{% url 'profile' %}">Mon profil</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}">Connexion</a></li>
+                        <li><a href="{% url 'register' %}">Inscription</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <h5 class="footer-heading">Notre hôtel</h5>
+                <ul class="footer-links">
+                    <li><a href="#">À propos de nous</a></li>
+                    <li><a href="#">Services</a></li>
+                    <li><a href="#">Galerie</a></li>
+                    <li><a href="#">Témoignages</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Politique de confidentialité</a></li>
+                    <li><a href="#">Conditions générales</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <h5 class="footer-heading">Contact</h5>
+                <div class="footer-contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>123 Avenue des Champs-Élysées, 75008 Paris, France</span>
+                </div>
+                <div class="footer-contact-item">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>+33 1 23 45 67 89</span>
+                </div>
+                <div class="footer-contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>info@hoteldeluxe.com</span>
+                </div>
+                <div class="footer-contact-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Réception ouverte 24h/24, 7j/7</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; {% now "Y" %} Hôtel Deluxe. Tous droits réservés. | Conçu avec <i class="fas fa-heart text-danger"></i> pour vous offrir le meilleur service.</p>
+        </div>
+    </div>
+</footer>

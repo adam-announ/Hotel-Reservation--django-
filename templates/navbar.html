@@ -1,0 +1,94 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <i class="fas fa-hotel"></i> Hôtel Deluxe
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/rooms/' in request.path and not '/search/' in request.path %}active{% endif %}" href="{% url 'room_list' %}">Chambres</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/rooms/search/' in request.path %}active{% endif %}" href="{% url 'search_availability' %}">Disponibilités</a>
+                </li>
+                
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/reservations/' in request.path %}active{% endif %}" href="{% url 'reservation_list' %}">Mes réservations</a>
+                    </li>
+                    
+                    {% if user.profile.role.name == 'Administrateur' or user.profile.role.name == 'Manager' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Administration
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                <li><a class="dropdown-item" href="{% url 'user_list' %}">Utilisateurs</a></li>
+                                <li><a class="dropdown-item" href="{% url 'manage_roles' %}">Rôles</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'room_type_list' %}">Types de chambre</a></li>
+                                <li><a class="dropdown-item" href="{% url 'manage_equipment' %}">Équipements</a></li>
+                                <li><a class="dropdown-item" href="{% url 'manage_services' %}">Services</a></li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if '/reports/' in request.path %}active{% endif %}" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Rapports
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                                <li><a class="dropdown-item" href="{% url 'report_list' %}">Liste des rapports</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'occupancy_report' %}">Taux d'occupation</a></li>
+                                <li><a class="dropdown-item" href="{% url 'revenue_report' %}">Revenus</a></li>
+                                <li><a class="dropdown-item" href="{% url 'client_stats' %}">Statistiques clients</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    
+                    {% if user.profile.role.name == 'Réceptionniste' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">Tableau de bord</a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            
+            <ul class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                <i class="fas fa-user me-2"></i> Mon profil
+                            </a></li>
+                            <!-- Tableau de bord disponible pour tous les utilisateurs authentifiés -->
+                            <li><a class="dropdown-item" href="{% url 'dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                            </a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-primary me-2" href="{% url 'login' %}">Connexion</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary text-white" href="{% url 'register' %}">Inscription</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

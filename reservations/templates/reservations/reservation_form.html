@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer une réservation - Hôtel Deluxe{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/forms.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h2 class="mb-4">Nouvelle réservation</h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card reservation-form mb-4">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if not user.is_staff %}
+                            <div class="alert alert-info">
+                                Vous réservez en tant que {{ user.username }} ({{ user.email }})
+                            </div>
+                            {{ form.client.as_hidden }}
+                        {% else %}
+                            <div class="mb-3">
+                                <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
+                                {{ form.client }}
+                                {% if form.client.errors %}
+                                    <div class="text-danger">{{ form.client.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.check_in_date.id_for_label }}" class="form-label">Date d'arrivée</label>
+                                {{ form.check_in_date }}
+                                {% if form.check_in_date.errors %}
+                                    <div class="text-danger">{{ form.check_in_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.check_out_date.id_for_label }}" class="form-label">Date de départ</label>
+                                {{ form.check_out_date }}
+                                {% if form.check_out_date.errors %}
+                                    <div class="text-danger">{{ form.check_out_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Chambres</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    {% for room in form.rooms %}
+                                        <div class="form-check">
+                                            {{ room }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if form.rooms.errors %}
+                                <div class="text-danger">{{ form.rooms.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Services additionnels</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    {% for service in form.services %}
+                                        <div class="form-check">
+                                            {{ service }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if form.services.errors %}
+                                <div class="text-danger">{{ form.services.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes ou demandes spéciales</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'search_availability' %}" class="btn btn-outline-secondary">Retour</a>
+                            <button type="submit" class="btn btn-primary">Continuer vers le paiement</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Résumé de la réservation</h5>
+                </div>
+                <div class="card-body">
+                    <div id="reservation-summary">
+                        <p>Veuillez sélectionner au moins une chambre pour voir le résumé de votre réservation.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Politique de réservation</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Check-in à partir de 14h00</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Check-out avant 11h00</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Annulation gratuite jusqu'à 24h avant l'arrivée</li>
+                        <li><i class="fas fa-info-circle text-primary me-2"></i> Une carte de crédit valide est nécessaire pour garantir la réservation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mettre à jour le résumé de la réservation lorsque l'utilisateur sélectionne des chambres ou services
+    document.addEventListener('DOMContentLoaded', function() {
+        const roomCheckboxes = document.querySelectorAll('input[name="rooms"]');
+        const serviceCheckboxes = document.querySelectorAll('input[name="services"]');
+        const checkInDate = document.getElementById('{{ form.check_in_date.id_for_label }}');
+        const checkOutDate = document.getElementById('{{ form.check_out_date.id_for_label }}');
+        const summaryDiv = document.getElementById('reservation-summary');
+        
+        function updateSummary() {
+            // Obtenir les chambres sélectionnées
+            const selectedRooms = [];
+            roomCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedRooms.push({
+                        id: checkbox.value,
+                        name: checkbox.parentNode.textContent.trim()
+                    });
+                }
+            });
+            
+            // Obtenir les services sélectionnés
+            const selectedServices = [];
+            serviceCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedServices.push({
+                        id: checkbox.value,
+                        name: checkbox.parentNode.textContent.trim()
+                    });
+                }
+            });
+            
+            // Calculer la durée du séjour
+            let duration = 0;
+            if (checkInDate.value && checkOutDate.value) {
+                const arrival = new Date(checkInDate.value);
+                const departure = new Date(checkOutDate.value);
+                duration = Math.ceil((departure - arrival) / (1000 * 60 * 60 * 24));
+            }
+            
+            // Mettre à jour le résumé
+            if (selectedRooms.length > 0 && duration > 0) {
+                let html = `
+                    <p><strong>Dates de séjour:</strong> ${checkInDate.value} au ${checkOutDate.value}</p>
+                    <p><strong>Durée:</strong> ${duration} nuit(s)</p>
+                    <hr>
+                    <p><strong>Chambres:</strong></p>
+                    <ul>
+                `;
+                
+                selectedRooms.forEach(room => {
+                    html += `<li>${room.name}</li>`;
+                });
+                
+                html += `</ul>`;
+                
+                if (selectedServices.length > 0) {
+                    html += `
+                        <hr>
+                        <p><strong>Services additionnels:</strong></p>
+                        <ul>
+                    `;
+                    
+                    selectedServices.forEach(service => {
+                        html += `<li>${service.name}</li>`;
+                    });
+                    
+                    html += `</ul>`;
+                }
+                
+                html += `
+                    <hr>
+                    <p class="text-muted">Le montant total sera calculé à l'étape suivante.</p>
+                `;
+                
+                summaryDiv.innerHTML = html;
+            } else {
+                summaryDiv.innerHTML = '<p>Veuillez sélectionner au moins une chambre et des dates valides pour voir le résumé de votre réservation.</p>';
+            }
+        }
+        
+        // Attacher les événements
+        roomCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSummary);
+        });
+        
+        serviceCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSummary);
+        });
+        
+        checkInDate.addEventListener('change', updateSummary);
+        checkOutDate.addEventListener('change', updateSummary);
+        
+        // Mettre à jour initialement
+        updateSummary();
+    });
+</script>
+{% endblock %}

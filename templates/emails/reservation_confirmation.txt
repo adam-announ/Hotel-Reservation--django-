@@ -1,0 +1,69 @@
+CONFIRMATION DE RÉSERVATION - HÔTEL DELUXE
+==========================================
+
+Cher(e) {{ user.get_full_name }},
+
+Nous vous remercions pour votre réservation à l'Hôtel Deluxe.
+
+DÉTAILS DE LA RÉSERVATION
+--------------------------
+Numéro de réservation: #{{ reservation.id }}
+Nom du client: {{ user.get_full_name }}
+Email: {{ user.email }}
+Date d'arrivée: {{ reservation.check_in_date|date:"l d F Y" }}
+Date de départ: {{ reservation.check_out_date|date:"l d F Y" }}
+Durée du séjour: {{ nights }} nuit{{ nights|pluralize }}
+Statut: {{ reservation.get_status_display }}
+
+CHAMBRES RÉSERVÉES
+------------------
+{% for room in rooms %}
+- {{ room.room_type.name }} - Chambre {{ room.number }}
+  Étage {{ room.floor }} | Capacité: {{ room.room_type.max_capacity }} personnes | {{ room.base_price }}€/nuit
+{% endfor %}
+
+{% if services %}
+SERVICES ADDITIONNELS
+---------------------
+{% for service in services %}
+- {{ service.name }} - {{ service.price }}€
+  {{ service.description }}
+{% endfor %}
+{% endif %}
+
+RÉCAPITULATIF FINANCIER
+-----------------------
+Montant total: {{ reservation.total_amount }}€
+Statut du paiement: {% if reservation.status == 'CONFIRMED' %}Payé{% else %}En attente{% endif %}
+
+INFORMATIONS IMPORTANTES
+------------------------
+- Check-in: À partir de 14h00
+- Check-out: Avant 11h00
+- Pièce d'identité: Requise lors de l'arrivée
+- Annulation: Gratuite jusqu'à 24h avant l'arrivée
+- Wi-Fi: Gratuit dans tout l'établissement
+- Parking: Disponible sur place (supplément)
+
+{% if reservation.notes %}
+NOTES ET DEMANDES SPÉCIALES
+---------------------------
+{{ reservation.notes }}
+{% endif %}
+
+Pour consulter votre réservation en ligne, visitez:
+http://127.0.0.1:8000/reservations/{{ reservation.id }}/
+
+Nous nous réjouissons de vous accueillir bientôt à l'Hôtel Deluxe !
+
+Cordialement,
+L'équipe de l'Hôtel Deluxe
+
+{{ hotel_name }}
+{{ hotel_address }}
+Téléphone: {{ hotel_phone }} | Email: {{ hotel_email }}
+Réception ouverte 24h/24, 7j/7
+
+---
+Cet email a été envoyé automatiquement. Merci de ne pas y répondre.
+Si vous avez des questions, contactez-nous au {{ hotel_phone }}.

@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapport de taux d'occupation - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Rapport de taux d'occupation</h1>
+                <p class="text-muted">Analysez le taux d'occupation de l'hôtel sur une période donnée.</p>
+            </div>
+            <div>
+                <a href="{% url 'report_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour aux rapports
+                </a>
+            </div>
+        </div>
+        
+        <!-- Formulaire de sélection de période -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Sélection de la période</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" class="row g-3">
+                    {% csrf_token %}
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label">Date de début</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label">Date de fin</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i> Générer le rapport
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if occupancy_data %}
+            <!-- Résumé du rapport -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Taux d'occupation moyen</h5>
+                            <div class="display-4 text-primary">{{ avg_occupancy }}%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Taux maximum</h5>
+                            <div class="display-4 text-success">{{ max_occupancy }}%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Taux minimum</h5>
+                            <div class="display-4 text-danger">{{ min_occupancy }}%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Total des chambres</h5>
+                            <div class="display-4">{{ total_rooms }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Graphique d'occupation -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Évolution du taux d'occupation</h4>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="occupancyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analyse par jour de la semaine -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4 class="mb-0">Taux d'occupation par jour de la semaine</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="weekdayChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4 class="mb-0">Répartition par type de chambre</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Type de chambre</th>
+                                            <th>Nombre</th>
+                                            <th>Réservations</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stat in room_type_stats %}
+                                        <tr>
+                                            <td>{{ stat.room_type.name }}</td>
+                                            <td>{{ stat.rooms_count }}</td>
+                                            <td>{{ stat.reservations_count }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Données détaillées -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Données détaillées</h4>
+                    <div>
+                        <button type="submit" form="export-form" name="export_csv" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-file-csv me-2"></i> Exporter en CSV
+                        </button>
+                        <button type="submit" form="export-form" name="save_report" class="btn btn-sm btn-primary">
+                            <i class="fas fa-save me-2"></i> Sauvegarder le rapport
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Réservations</th>
+                                    <th>Chambres réservées</th>
+                                    <th>Taux d'occupation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for day in occupancy_data %}
+                                <tr>
+                                    <td>{{ day.date|date:"d/m/Y" }}</td>
+                                    <td>{{ day.reservations }}</td>
+                                    <td>{{ day.rooms_reserved }}</td>
+                                    <td>{{ day.occupancy_rate }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulaire d'export invisible -->
+            <form id="export-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                <input type="hidden" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+            </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if occupancy_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Graphique d'évolution du taux d'occupation
+        const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+        new Chart(occupancyCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for day in occupancy_data %}'{{ day.date|date:"d/m" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Taux d\'occupation (%)',
+                    data: [{% for day in occupancy_data %}{{ day.occupancy_rate }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Graphique par jour de la semaine
+        const weekdayCtx = document.getElementById('weekdayChart').getContext('2d');
+        new Chart(weekdayCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for day in weekday_avg %}'{{ day.day }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Taux d\'occupation moyen (%)',
+                    data: [{% for day in weekday_avg %}{{ day.avg_rate }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.7)',
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(155, 89, 182, 0.7)',
+                        'rgba(230, 126, 34, 0.7)',
+                        'rgba(231, 76, 60, 0.7)',
+                        'rgba(241, 196, 15, 0.7)',
+                        'rgba(26, 188, 156, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(52, 152, 219, 1)',
+                        'rgba(46, 204, 113, 1)',
+                        'rgba(155, 89, 182, 1)',
+                        'rgba(230, 126, 34, 1)',
+                        'rgba(231, 76, 60, 1)',
+                        'rgba(241, 196, 15, 1)',
+                        'rgba(26, 188, 156, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

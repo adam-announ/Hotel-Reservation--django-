@@ -1,0 +1,60 @@
+CONFIRMATION DE PAIEMENT - HÔTEL DELUXE
+=======================================
+
+Cher(e) {{ user.get_full_name }},
+
+Nous avons bien reçu votre paiement pour votre réservation à l'Hôtel Deluxe. Merci !
+
+DÉTAILS DU PAIEMENT
+-------------------
+Numéro de réservation: #{{ reservation.id }}
+Montant payé: {{ payment.amount }}€
+Méthode de paiement: {{ payment.get_payment_method_display }}
+Date du paiement: {{ payment.payment_date|date:"l d F Y à H:i" }}
+{% if payment.reference %}Référence: {{ payment.reference }}{% endif %}
+Statut: Confirmé ✓
+
+RÉCAPITULATIF FINANCIER
+-----------------------
+Montant total de la réservation: {{ reservation.total_amount }}€
+Total payé: {{ total_paid }}€
+Solde restant: {% if balance > 0 %}{{ balance }}€{% else %}Entièrement payé ✓{% endif %}
+
+RAPPEL DE VOTRE SÉJOUR
+----------------------
+Dates de séjour: Du {{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}
+Statut de la réservation: {% if reservation.status == 'CONFIRMED' %}Confirmée ✓{% else %}{{ reservation.get_status_display }}{% endif %}
+
+{% if balance > 0 %}
+PAIEMENT PARTIEL
+----------------
+Il reste encore {{ balance }}€ à régler pour cette réservation. 
+Vous pourrez finaliser le paiement:
+- En ligne sur notre site web
+- À votre arrivée à l'hôtel  
+- Par téléphone au {{ hotel_phone }}
+{% else %}
+PAIEMENT COMPLET
+----------------
+Excellent ! Votre réservation est entièrement payée. 
+Vous n'avez plus rien à régler.
+{% endif %}
+
+Pour consulter votre réservation en ligne, visitez:
+http://127.0.0.1:8000/reservations/{{ reservation.id }}/
+
+Si vous avez des questions concernant votre paiement ou votre réservation, 
+n'hésitez pas à nous contacter.
+
+Merci de votre confiance !
+
+Cordialement,
+L'équipe de l'Hôtel Deluxe
+
+{{ hotel_name }}
+Téléphone: {{ hotel_phone }} | Email: {{ hotel_email }}
+Service client disponible 24h/24, 7j/7
+
+---
+Cet email a été envoyé automatiquement. Merci de ne pas y répondre.
+Conservez cet email comme preuve de paiement.

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de paiement - Hôtel Deluxe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .payment-details {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .total-section {
+            background-color: #d4edda;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border: 2px solid #28a745;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .success-icon {
+            font-size: 48px;
+            color: #28a745;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💳 Paiement Confirmé</h1>
+        <h2>Hôtel Deluxe</h2>
+    </div>
+    
+    <div class="content">
+        <div class="success-icon">✅</div>
+        
+        <p>Cher(e) {{ user.get_full_name }},</p>
+        
+        <p>Nous avons bien reçu votre paiement pour votre réservation à l'Hôtel Deluxe. Merci !</p>
+        
+        <div class="payment-details">
+            <h3>💰 Détails du paiement</h3>
+            <table>
+                <tr>
+                    <th>Numéro de réservation</th>
+                    <td><strong>#{{ reservation.id }}</strong></td>
+                </tr>
+                <tr>
+                    <th>Montant payé</th>
+                    <td><strong>{{ payment.amount }}€</strong></td>
+                </tr>
+                <tr>
+                    <th>Méthode de paiement</th>
+                    <td>{{ payment.get_payment_method_display }}</td>
+                </tr>
+                <tr>
+                    <th>Date du paiement</th>
+                    <td>{{ payment.payment_date|date:"l d F Y à H:i" }}</td>
+                </tr>
+                {% if payment.reference %}
+                <tr>
+                    <th>Référence</th>
+                    <td>{{ payment.reference }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Statut</th>
+                    <td style="color: green;"><strong>✅ Confirmé</strong></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="total-section">
+            <h3>📊 Récapitulatif financier</h3>
+            <table>
+                <tr>
+                    <th>Montant total de la réservation</th>
+                    <td>{{ reservation.total_amount }}€</td>
+                </tr>
+                <tr>
+                    <th>Total payé</th>
+                    <td>{{ total_paid }}€</td>
+                </tr>
+                <tr>
+                    <th>Solde restant</th>
+                    <td>
+                        {% if balance > 0 %}
+                            <span style="color: orange;">{{ balance }}€</span>
+                        {% else %}
+                            <span style="color: green;"><strong>✅ Entièrement payé</strong></span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="payment-details">
+            <h3>📋 Rappel de votre séjour</h3>
+            <table>
+                <tr>
+                    <th>Dates de séjour</th>
+                    <td>Du {{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}</td>
+                </tr>
+                <tr>
+                    <th>Statut de la réservation</th>
+                    <td>
+                        {% if reservation.status == 'CONFIRMED' %}
+                            <span style="color: green;"><strong>✅ Confirmée</strong></span>
+                        {% else %}
+                            {{ reservation.get_status_display }}
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        {% if balance > 0 %}
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 15px 0;">
+            <h3>⚠️ Paiement partiel</h3>
+            <p>Il reste encore <strong>{{ balance }}€</strong> à régler pour cette réservation. Vous pourrez finaliser le paiement:</p>
+            <ul>
+                <li>En ligne sur notre site web</li>
+                <li>À votre arrivée à l'hôtel</li>
+                <li>Par téléphone au {{ hotel_phone }}</li>
+            </ul>
+        </div>
+        {% else %}
+        <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745; margin: 15px 0;">
+            <h3>🎉 Paiement complet</h3>
+            <p>Excellent ! Votre réservation est entièrement payée. Vous n'avez plus rien à régler.</p>
+        </div>
+        {% endif %}
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="http://127.0.0.1:8000/reservations/{{ reservation.id }}/" 
+               style="display: inline-block; background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                📱 Voir ma réservation en ligne
+            </a>
+        </div>
+        
+        <p>Si vous avez des questions concernant votre paiement ou votre réservation, n'hésitez pas à nous contacter.</p>
+        
+        <p>Merci de votre confiance !</p>
+        
+        <p>Cordialement,<br>
+        L'équipe de l'Hôtel Deluxe</p>
+    </div>
+    
+    <div class="footer">
+        <h3>{{ hotel_name }}</h3>
+        <p>Téléphone: {{ hotel_phone }} | Email: {{ hotel_email }}</p>
+        <p>Service client disponible 24h/24, 7j/7</p>
+        
+        <div style="margin-top: 15px;">
+            <small>
+                Cet email a été envoyé automatiquement. Merci de ne pas y répondre.<br>
+                Conservez cet email comme preuve de paiement.
+            </small>
+        </div>
+    </div>
+</body>
+</html>

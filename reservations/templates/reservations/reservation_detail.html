@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails de la réservation #{{ reservation.id }} - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Détails de la réservation #{{ reservation.id }}</h1>
+                <p class="text-muted">
+                    Créée le {{ reservation.created_at|date:"d/m/Y à H:i" }}
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'reservation_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour à la liste
+                </a>
+            </div>
+        </div>
+
+        <!-- Informations générales -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h4 class="mb-0">Informations générales</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Client:</strong> {{ reservation.client.profile.user.get_full_name }}</p>
+                            <p class="mb-1"><strong>Statut:</strong> 
+                                {% if reservation.status == 'PENDING' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% elif reservation.status == 'CONFIRMED' %}
+                                    <span class="badge bg-success">Confirmée</span>
+                                {% elif reservation.status == 'CHECKED_IN' %}
+                                    <span class="badge bg-primary">Check-in effectué</span>
+                                {% elif reservation.status == 'CHECKED_OUT' %}
+                                    <span class="badge bg-info">Terminée</span>
+                                {% elif reservation.status == 'CANCELLED' %}
+                                    <span class="badge bg-danger">Annulée</span>
+                                {% endif %}
+                            </p>
+                            <p class="mb-1"><strong>Dates:</strong> Du {{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}</p>
+                            <p class="mb-1"><strong>Durée:</strong> {{ nights }} nuit(s)</p>
+                        </div>
+
+                        <div class="alert alert-primary mb-0">
+                            <h5 class="mb-1">Montant total: {{ reservation.total_amount }} €</h5>
+                            {% if balance > 0 %}
+                                <p class="mb-0">Reste à payer: {{ balance }} €</p>
+                            {% else %}
+                                <p class="mb-0">Entièrement payé</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h4 class="mb-0">Chambres réservées</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for room in reservation.rooms.all %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-0">{{ room.room_type.name }} - Chambre {{ room.number }}</h5>
+                                        <small class="text-muted">{{ room.floor }}ème étage</small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">{{ room.base_price }} € / nuit</span>
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item text-center">Aucune chambre associée</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services additionnels -->
+        {% if reservation.services.exists %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Services additionnels</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Description</th>
+                                <th>Prix</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for service in reservation.services.all %}
+                            <tr>
+                                <td>{{ service.name }}</td>
+                                <td>{{ service.description }}</td>
+                                <td>{{ service.price }} €</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Paiements -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Paiements</h4>
+                {% if is_staff or balance > 0 %}
+                <a href="{% url 'create_payment' reservation.id %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-2"></i> Ajouter un paiement
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Méthode</th>
+                                <th>Référence</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.reference|default:"-" }}</td>
+                                <td>{{ payment.amount }} €</td>
+                                <td>
+                                    {% if payment.is_confirmed %}
+                                    <span class="badge bg-success">Confirmé</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">En attente</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">
+                                    <p class="text-muted mb-0">Aucun paiement enregistré</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <th colspan="3" class="text-end">Total payé:</th>
+                                <th>{{ total_paid }} €</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Notes et demandes spéciales</h4>
+            </div>
+            <div class="card-body">
+                {% if reservation.notes %}
+                    <p>{{ reservation.notes }}</p>
+                {% else %}
+                    <p class="text-muted">Aucune note pour cette réservation.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        {% if reservation.status == 'PENDING' or reservation.status == 'CONFIRMED' %}
+                            <a href="{% url 'cancel_reservation' reservation.id %}" class="btn btn-danger">
+                                <i class="fas fa-times me-2"></i> Annuler la réservation
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if is_staff %}
+                            {% if reservation.status == 'CONFIRMED' %}
+                                <a href="{% url 'check_in' reservation.id %}" class="btn btn-success">
+                                    <i class="fas fa-check-circle me-2"></i> Effectuer le check-in
+                                </a>
+                            {% elif reservation.status == 'CHECKED_IN' %}
+                                <a href="{% url 'check_out' reservation.id %}" class="btn btn-info">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Effectuer le check-out
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

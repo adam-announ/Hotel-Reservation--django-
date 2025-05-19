@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Types de chambres - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Types de chambres</h1>
+                <p class="text-muted">Gérez les différents types de chambres de l'hôtel.</p>
+            </div>
+            <div>
+                <a href="{% url 'room_type_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Ajouter un type
+                </a>
+            </div>
+        </div>
+        
+        <!-- Liste des types de chambres -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Types de chambres</h4>
+                <div>
+                    <span class="badge bg-primary">{{ room_types|length|default:"0" }} types</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Description</th>
+                                <th>Capacité max.</th>
+                                <th>Prix de base</th>
+                                <th>Équipements</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room_type in room_types %}
+                            <tr>
+                                <td>{{ room_type.name }}</td>
+                                <td>{{ room_type.description|truncatechars:100 }}</td>
+                                <td>{{ room_type.max_capacity }} personnes</td>
+                                <td>{{ room_type.base_price }} €</td>
+                                <td>
+                                    {% for equipment in room_type.equipment.all %}
+                                        <span class="badge bg-light text-dark">{{ equipment.name }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">Aucun équipement</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'room_type_update' room_type.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'room_type_delete' room_type.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-bed fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">Aucun type de chambre trouvé</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

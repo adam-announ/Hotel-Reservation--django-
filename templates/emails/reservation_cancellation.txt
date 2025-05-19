@@ -1,0 +1,55 @@
+ANNULATION DE RÉSERVATION - HÔTEL DELUXE
+========================================
+
+Cher(e) {{ user.get_full_name }},
+
+Nous vous confirmons l'annulation de votre réservation à l'Hôtel Deluxe.
+
+DÉTAILS DE LA RÉSERVATION ANNULÉE
+----------------------------------
+Numéro de réservation: #{{ reservation.id }}
+Nom du client: {{ user.get_full_name }}
+Date d'arrivée prévue: {{ reservation.check_in_date|date:"l d F Y" }}
+Date de départ prévue: {{ reservation.check_out_date|date:"l d F Y" }}
+Montant de la réservation: {{ reservation.total_amount }}€
+Date d'annulation: {{ reservation.updated_at|date:"l d F Y à H:i" }}
+Statut: Annulée ❌
+
+POLITIQUE DE REMBOURSEMENT
+--------------------------
+Conformément à notre politique d'annulation :
+
+• Annulation gratuite : Jusqu'à 24h avant l'arrivée
+• Annulation tardive : Des frais peuvent s'appliquer  
+• Traitement des remboursements : 3-5 jours ouvrables
+
+Si un remboursement est applicable, celui-ci sera traité sous 
+3 à 5 jours ouvrables sur votre moyen de paiement original.
+
+BESOIN D'AIDE ?
+---------------
+Si cette annulation n'était pas volontaire ou si vous avez des questions concernant :
+• Le processus de remboursement
+• Une nouvelle réservation
+• Des circonstances particulières
+
+N'hésitez pas à nous contacter immédiatement au {{ hotel_phone }}.
+
+LIENS UTILES
+------------
+Rechercher d'autres dates: http://127.0.0.1:8000/rooms/search/
+Retour à l'accueil: http://127.0.0.1:8000/
+
+Nous regrettons que votre séjour ne puisse avoir lieu et espérons 
+vous accueillir prochainement à l'Hôtel Deluxe.
+
+Cordialement,
+L'équipe de l'Hôtel Deluxe
+
+{{ hotel_name }}
+Téléphone: {{ hotel_phone }} | Email: {{ hotel_email }}
+Service client disponible 24h/24, 7j/7
+
+---
+Cet email a été envoyé automatiquement. Merci de ne pas y répondre.
+Pour toute question, contactez-nous au {{ hotel_phone }}.

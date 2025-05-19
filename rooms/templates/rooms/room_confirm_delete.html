@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer une chambre - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h3 class="mb-0">Supprimer la chambre</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">Attention</h5>
+                                    <p class="mb-0">Vous êtes sur le point de supprimer la chambre <strong>{{ room.number }}</strong> ({{ room.room_type.name }}). Cette action est irréversible.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if room.reservations.exists %}
+                            <div class="alert alert-danger mt-3">
+                                <p><strong>Cette chambre a {{ room.reservations.count }} réservation(s) associée(s).</strong></p>
+                                <p>La suppression de cette chambre pourrait affecter ces réservations.</p>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'room_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Annuler
+                            </a>
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i> Confirmer la suppression
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

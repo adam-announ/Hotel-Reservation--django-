@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+
+{% block title %}Nouvelle réservation - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h2 class="mb-4">Nouvelle réservation</h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card reservation-form mb-4">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Client selection for staff -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Client</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="client_search" class="form-label">Rechercher un client</label>
+                                    <div class="input-group">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="client_search" 
+                                               placeholder="Nom, email ou téléphone..."
+                                               autocomplete="off">
+                                        <button type="button" class="btn btn-outline-primary" id="search_client_btn">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <div id="client_search_results" class="mt-2"></div>
+                                </div>
+                                
+                                <div class="row" id="selected_client_info" style="display: none;">
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <strong>Client sélectionné:</strong>
+                                            <span id="selected_client_name"></span>
+                                            (<span id="selected_client_email"></span>)
+                                            <input type="hidden" name="client" id="selected_client_id">
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="clear_client_selection">
+                                                <i class="fas fa-times"></i> Changer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Option pour créer un nouveau client -->
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newClientModal">
+                                        <i class="fas fa-plus me-2"></i> Créer un nouveau client
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dates -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Dates de séjour</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.check_in_date.id_for_label }}" class="form-label">Date d'arrivée</label>
+                                        {{ form.check_in_date }}
+                                        {% if form.check_in_date.errors %}
+                                            <div class="text-danger">{{ form.check_in_date.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.check_out_date.id_for_label }}" class="form-label">Date de départ</label>
+                                        {{ form.check_out_date }}
+                                        {% if form.check_out_date.errors %}
+                                            <div class="text-danger">{{ form.check_out_date.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chambres -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Chambres</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for room in form.rooms %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        {{ room }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if form.rooms.errors %}
+                                    <div class="text-danger">{{ form.rooms.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Services -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Services additionnels</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for service in form.services %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                {{ service }}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if form.services.errors %}
+                                    <div class="text-danger">{{ form.services.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Notes</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes ou demandes spéciales</label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger">{{ form.notes.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'reservation_list' %}" class="btn btn-outline-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary" id="submit_reservation" disabled>
+                                <i class="fas fa-save me-2"></i> Créer la réservation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Résumé de la réservation</h5>
+                </div>
+                <div class="card-body">
+                    <div id="reservation-summary">
+                        <p>Veuillez sélectionner un client et au moins une chambre pour voir le résumé.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Politique de réservation</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Check-in à partir de 14h00</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Check-out avant 11h00</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Annulation gratuite jusqu'à 24h avant l'arrivée</li>
+                        <li><i class="fas fa-info-circle text-primary me-2"></i> Paiement peut être effectué à l'arrivée</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour nouveau client -->
+<div class="modal fade" id="newClientModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Créer un nouveau client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newClientForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Téléphone</label>
+                            <input type="text" class="form-control" id="phone" name="phone">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Adresse</label>
+                        <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="saveNewClient">Créer le client</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedClientId = null;
+    
+    // Recherche de clients
+    document.getElementById('search_client_btn').addEventListener('click', function() {
+        const query = document.getElementById('client_search').value;
+        if (query.length < 2) {
+            alert('Veuillez saisir au moins 2 caractères');
+            return;
+        }
+        
+        fetch(`/reservations/search-clients/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('client_search_results');
+                resultsDiv.innerHTML = '';
+                
+                if (data.clients.length === 0) {
+                    resultsDiv.innerHTML = '<div class="alert alert-warning">Aucun client trouvé</div>';
+                    return;
+                }
+                
+                const listGroup = document.createElement('div');
+                listGroup.className = 'list-group';
+                
+                data.clients.forEach(client => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${client.full_name}</h6>
+                            <small>${client.phone || ''}</small>
+                        </div>
+                        <p class="mb-1">${client.email}</p>
+                    `;
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        selectClient(client);
+                    });
+                    listGroup.appendChild(item);
+                });
+                
+                resultsDiv.appendChild(listGroup);
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la recherche');
+            });
+    });
+    
+    // Sélectionner un client
+    function selectClient(client) {
+        selectedClientId = client.id;
+        document.getElementById('selected_client_id').value = client.id;
+        document.getElementById('selected_client_name').textContent = client.full_name;
+        document.getElementById('selected_client_email').textContent = client.email;
+        document.getElementById('selected_client_info').style.display = 'block';
+        document.getElementById('client_search_results').innerHTML = '';
+        document.getElementById('client_search').value = '';
+        updateSubmitButton();
+    }
+    
+    // Effacer la sélection de client
+    document.getElementById('clear_client_selection').addEventListener('click', function() {
+        selectedClientId = null;
+        document.getElementById('selected_client_id').value = '';
+        document.getElementById('selected_client_info').style.display = 'none';
+        updateSubmitButton();
+    });
+    
+    // Créer un nouveau client
+    document.getElementById('saveNewClient').addEventListener('click', function() {
+        const form = document.getElementById('newClientForm');
+        const formData = new FormData(form);
+        
+        fetch('/accounts/create-client-ajax/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                selectClient(data.client);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newClientModal'));
+                modal.hide();
+                form.reset();
+            } else {
+                alert('Erreur lors de la création du client: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la création du client');
+        });
+    });
+    
+    // Mettre à jour le bouton de soumission
+    function updateSubmitButton() {
+        const submitBtn = document.getElementById('submit_reservation');
+        submitBtn.disabled = !selectedClientId;
+    }
+    
+    // Recherche en temps réel
+    document.getElementById('client_search').addEventListener('input', function() {
+        const query = this.value;
+        if (query.length >= 2) {
+            // Auto-search after 500ms
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                document.getElementById('search_client_btn').click();
+            }, 500);
+        }
+    });
+});
+</script>
+{% endblock %}

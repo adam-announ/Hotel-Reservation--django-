@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Annulation de réservation - Hôtel Deluxe{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h3 class="mb-0">Annulation de réservation</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">Attention</h5>
+                                    <p class="mb-0">Vous êtes sur le point d'annuler votre réservation. Cette action est irréversible.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>Détails de la réservation :</h5>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <p><strong>Référence :</strong> #{{ reservation.id }}</p>
+                                    <p><strong>Client :</strong> {{ reservation.client.profile.user.get_full_name }}</p>
+                                    <p><strong>Dates :</strong> Du {{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}</p>
+                                    <p><strong>Montant total :</strong> {{ reservation.total_amount }} €</p>
+                                    <p><strong>Statut :</strong> 
+                                        {% if reservation.status == 'PENDING' %}
+                                            <span class="badge bg-warning">En attente</span>
+                                        {% elif reservation.status == 'CONFIRMED' %}
+                                            <span class="badge bg-success">Confirmée</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Chambres :</strong>
+                                        {% for room in reservation.rooms.all %}
+                                            {{ room.room_type.name }} ({{ room.number }}){% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>Politique d'annulation :</h5>
+                            <ul>
+                                <li>Annulation gratuite jusqu'à 24h avant l'arrivée.</li>
+                                <li>Pour une annulation moins de 24h avant l'arrivée, des frais peuvent être appliqués.</li>
+                                <li>Les réservations déjà débutées (check-in effectué) ne peuvent pas être annulées.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'reservation_detail' reservation.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Retour aux détails
+                            </a>
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times me-2"></i> Confirmer l'annulation
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

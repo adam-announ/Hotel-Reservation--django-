@@ -1,0 +1,501 @@
+/* static/css/modern-animations.css */
+
+/* =========== GSAP-STYLE ANIMATIONS =========== */
+.fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.fade-in.animate-in {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.slide-in {
+    opacity: 0;
+    transform: translateX(-50px);
+}
+
+.slide-in.animate-in {
+    animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.scale-in {
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.scale-in.animate-in {
+    animation: scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger animations */
+.stagger-list .item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: staggerIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes staggerIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========== TEXT ANIMATIONS =========== */
+.text-reveal {
+    position: relative;
+    overflow: hidden;
+}
+
+.text-reveal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--accent-primary);
+    animation: reveal 1s cubic-bezier(0.85, 0, 0.15, 1) forwards;
+}
+
+@keyframes reveal {
+    0% {
+        right: 0;
+    }
+    50% {
+        right: 0;
+        left: 0;
+    }
+    100% {
+        right: 0;
+        left: 100%;
+    }
+}
+
+/* Typewriter effect */
+.typewriter {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typewriter 3s steps(40) 1s forwards;
+}
+
+@keyframes typewriter {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+/* =========== RIPPLE EFFECT =========== */
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: ripple-animation 0.6s ease-out;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* =========== SKELETON LOADING =========== */
+.skeleton-wrapper {
+    padding: var(--space-md);
+}
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--bg-secondary) 0%,
+        var(--bg-tertiary) 50%,
+        var(--bg-secondary) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 200px;
+    margin-bottom: var(--space-md);
+    border-radius: var(--radius-md);
+}
+
+.skeleton-title {
+    width: 60%;
+    height: 24px;
+    margin-bottom: var(--space-sm);
+}
+
+.skeleton-text {
+    width: 100%;
+    height: 16px;
+    margin-bottom: var(--space-xs);
+}
+
+.skeleton-list-item {
+    width: 100%;
+    height: 60px;
+    margin-bottom: var(--space-sm);
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* =========== NOTIFICATION STYLES =========== */
+.notification-container {
+    position: fixed;
+    top: calc(var(--space-xl) + 60px);
+    right: var(--space-xl);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.notification {
+    min-width: 300px;
+    max-width: 400px;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transform: translateX(400px);
+    transition: transform var(--transition-base);
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity var(--transition-base);
+}
+
+.notification-close:hover {
+    opacity: 1;
+}
+
+.notification-success {
+    border-left: 4px solid var(--success);
+}
+
+.notification-error {
+    border-left: 4px solid var(--error);
+}
+
+.notification-warning {
+    border-left: 4px solid var(--warning);
+}
+
+.notification-info {
+    border-left: 4px solid var(--info);
+}
+
+/* =========== PARALLAX EFFECTS =========== */
+.parallax-container {
+    position: relative;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.parallax {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120%;
+    object-fit: cover;
+    will-change: transform;
+}
+
+.parallax-slow {
+    --speed: 0.5;
+}
+
+.parallax-medium {
+    --speed: 0.8;
+}
+
+.parallax-fast {
+    --speed: 1.2;
+}
+
+/* =========== GALLERY STYLES =========== */
+.room-gallery {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+}
+
+.room-gallery img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--transition-slow);
+}
+
+.room-gallery img.active {
+    opacity: 1;
+}
+
+.gallery-indicators {
+    position: absolute;
+    bottom: var(--space-md);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.indicator-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.indicator-dot.active {
+    background-color: white;
+    transform: scale(1.2);
+}
+
+/* =========== ADVANCED HOVER EFFECTS =========== */
+.hover-3d {
+    transition: transform var(--transition-base);
+    transform-style: preserve-3d;
+}
+
+.hover-3d:hover {
+    transform: perspective(1000px) rotateX(10deg) rotateY(10deg) scale(1.05);
+}
+
+.hover-glow {
+    transition: all var(--transition-base);
+}
+
+.hover-glow:hover {
+    box-shadow: 
+        0 0 20px rgba(99, 102, 241, 0.5),
+        0 0 40px rgba(99, 102, 241, 0.3),
+        0 0 60px rgba(99, 102, 241, 0.1);
+}
+
+.hover-split {
+    position: relative;
+    overflow: hidden;
+}
+
+.hover-split::before,
+.hover-split::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background-color: var(--accent-primary);
+    transition: transform var(--transition-base);
+    z-index: -1;
+}
+
+.hover-split::before {
+    left: 0;
+    transform: translateX(-100%);
+}
+
+.hover-split::after {
+    right: 0;
+    transform: translateX(100%);
+}
+
+.hover-split:hover::before,
+.hover-split:hover::after {
+    transform: translateX(0);
+}
+
+/* =========== MORPHING BUTTONS =========== */
+.btn-morph {
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-base);
+}
+
+.btn-morph::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width var(--transition-slow), height var(--transition-slow);
+}
+
+.btn-morph:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* =========== CARD FLIP EFFECT =========== */
+.card-flip {
+    perspective: 1000px;
+    height: 400px;
+}
+
+.card-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+.card-flip:hover .card-flip-inner {
+    transform: rotateY(180deg);
+}
+
+.card-flip-front,
+.card-flip-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: var(--radius-lg);
+}
+
+.card-flip-back {
+    transform: rotateY(180deg);
+}
+
+/* =========== BLOB ANIMATION =========== */
+.blob {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    opacity: 0.3;
+    filter: blur(40px);
+    animation: blob 7s infinite;
+}
+
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+/* =========== CURSOR EFFECTS =========== */
+.custom-cursor {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-primary);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    transition: all 0.1s ease;
+    z-index: 10000;
+}
+
+.custom-cursor-dot {
+    width: 4px;
+    height: 4px;
+    background-color: var(--accent-primary);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+/* =========== PAGE TRANSITIONS =========== */
+body {
+    opacity: 1;
+    transition: opacity var(--transition-base);
+}
+
+body.fade-out {
+    opacity: 0;
+}
+
+/* =========== RESPONSIVE ANIMATIONS =========== */
+@media (max-width: 768px) {
+    /* Reduce animation complexity on mobile */
+    .parallax {
+        position: relative;
+        height: auto;
+        transform: none !important;
+    }
+    
+    .hover-3d:hover {
+        transform: none;
+    }
+    
+    .card-flip:hover .card-flip-inner {
+        transform: none;
+    }
+    
+    .blob {
+        display: none;
+    }
+}
+
+/* =========== PERFORMANCE OPTIMIZATIONS =========== */
+.will-change-transform {
+    will-change: transform;
+}
+
+.will-change-opacity {
+    will-change: opacity;
+}
+
+/* GPU acceleration for smooth animations */
+.gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}

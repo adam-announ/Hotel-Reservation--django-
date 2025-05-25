@@ -33,7 +33,17 @@
                                     <div class="col-md-6">
                                         <p><strong>Client:</strong> {{ reservation.client.profile.user.get_full_name }}</p>
                                         <p><strong>Dates:</strong> Du {{ reservation.check_in_date|date:"d/m/Y" }} au {{ reservation.check_out_date|date:"d/m/Y" }}</p>
-                                        <p><strong>Durée:</strong> {{ reservation.check_out_date|timeuntil:reservation.check_in_date|split:" "|first }}</p>
+                                        <p><strong>Durée:</strong> 
+                                                    {% if nights %}
+                                                    {{ nights }} nuit{{ nights|pluralize }}
+                                                    {% else %}
+                                                <!-- Calcul simple sans filtres -->
+                                                {% comment %}
+                                                Nous devons calculer manuellement ou passer nights depuis la vue
+                                                {% endcomment %}
+                                                Plusieurs nuits
+                                                 {% endif %}
+                                        </p>
                                     </div>
                                     <div class="col-md-6">
                                         <p><strong>Chambres:</strong></p>

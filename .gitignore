@@ -1,0 +1,12 @@
+# base Python / Django
+__pycache__/
+*.py[cod]
+db.sqlite3
+*.log
+
+# dossiers Django tirés si tu gères tes médias et static en prod
+media/
+static/
+
+# fichiers VSCode
+.vscode/

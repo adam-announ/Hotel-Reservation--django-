@@ -25,6 +25,14 @@ class Equipment(models.Model):
     def __str__(self):
         return self.name
 
+class RoomStatus(models.TextChoices):
+    AVAILABLE = 'AVAILABLE', 'Disponible'
+    OCCUPIED = 'OCCUPIED', 'Occupée'
+    CLEANING = 'CLEANING', 'En nettoyage'
+    MAINTENANCE = 'MAINTENANCE', 'En maintenance'
+    OUT_OF_ORDER = 'OUT_OF_ORDER', 'Hors service'
+
+
 class Room(models.Model):
     number = models.CharField(max_length=10, unique=True)
     room_type = models.ForeignKey(RoomType, related_name='rooms', on_delete=models.CASCADE)
@@ -34,6 +42,16 @@ class Room(models.Model):
     description = models.TextField(blank=True)
     equipment = models.ManyToManyField(Equipment, related_name='rooms')
     image = models.ImageField(upload_to='rooms/', null=True, blank=True)
+    
+
+    # NOUVEAU CHAMP À AJOUTER
+    status = models.CharField(
+        max_length=20,
+        choices=RoomStatus.choices,
+        default=RoomStatus.AVAILABLE
+    )
+
+
     
     def __str__(self):
         return f"Room {self.number} - {self.room_type.name}"

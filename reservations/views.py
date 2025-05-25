@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.db.models import Q, Sum
 from datetime import datetime, timedelta
 import json
+from django.shortcuts import render, redirect, get_object_or_404
 from accounts.models import Client
 from accounts.utils import send_reservation_confirmation_email, send_payment_confirmation_email, send_cancellation_email
 from rooms.models import Room
@@ -321,6 +322,7 @@ def check_in(request, pk):
         messages.error(request, "Vous n'avez pas l'autorisation d'effectuer cette action.")
         return redirect('reservation_list')
     
+    # CORRECTION: Récupérer la réservation AVANT les vérifications
     reservation = get_object_or_404(Reservation, pk=pk)
     
     # Vérifier si la réservation peut faire l'objet d'un check-in
@@ -351,10 +353,14 @@ def check_in(request, pk):
     total_paid = sum(payment.amount for payment in payments)
     balance = reservation.total_amount - total_paid
     
+    # Calculer le nombre de nuits
+    nights = (reservation.check_out_date - reservation.check_in_date).days
+    
     context = {
         'reservation': reservation,
         'balance': balance,
-        'total_paid': total_paid
+        'total_paid': total_paid,
+        'nights': nights
     }
     
     return render(request, 'reservations/check_in.html', context)
